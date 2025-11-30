@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes';
 import eventsRoutes from './routes/eventsRoutes';
 import sportsRoutes from './routes/sportsRoutes';
 import userRoutes from './routes/userRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/sports', sportsRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
