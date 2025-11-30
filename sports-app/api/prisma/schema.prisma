@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication and personalization
+model User {
+  id         Int         @id @default(autoincrement())
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  userEvents UserEvent[]
+
+  @@map("users")
+}
+
+// Sport model - top-level categorization
+model Sport {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  leagues League[]
+
+  @@map("sports")
+}
+
+// League model - specific competitions within a sport
+model League {
+  id      Int     @id @default(autoincrement())
+  sportId Int     @map("sport_id")
+  name    String
+  sport   Sport   @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  teams   Team[]
+  events  Event[]
+
+  @@index([sportId])
+  @@map("leagues")
+}
+
+// Team model - teams that compete in leagues
+model Team {
+  id         Int     @id @default(autoincrement())
+  leagueId   Int     @map("league_id")
+  name       String
+  league     League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  homeEvents Event[] @relation("HomeTeam")
+  awayEvents Event[] @relation("AwayTeam")
+
+  @@index([leagueId])
+  @@map("teams")
+}
+
+// Event model - individual matches/games
+model Event {
+  id            Int         @id @default(autoincrement())
+  leagueId      Int         @map("league_id")
+  homeTeamId    Int         @map("home_team_id")
+  awayTeamId    Int         @map("away_team_id")
+  eventDatetime DateTime    @map("event_datetime")
+  status        String // "Scheduled", "In Progress", "Final", "Postponed", "Cancelled"
+  homeScore     Int?        @map("home_score")
+  awayScore     Int?        @map("away_score")
+  externalApiId String?     @unique @map("external_api_id")
+  league        League      @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  userEvents    UserEvent[]
+
+  @@index([eventDatetime])
+  @@index([leagueId])
+  @@index([externalApiId])
+  @@index([status])
+  @@map("events")
+}
+
+// UserEvent model - junction table for user's personalized calendar
+model UserEvent {
+  id      Int   @id @default(autoincrement())
+  userId  Int   @map("user_id")
+  eventId Int   @map("event_id")
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+  @@map("user_events")
+}
